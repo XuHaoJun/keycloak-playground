@@ -32,8 +32,7 @@ public class RabbitmqEmailSenderProviderFactory implements EmailSenderProviderFa
             if (channel == null || !channel.isOpen()) {
                 channel = connection.createChannel();
             }
-        }
-        catch (IOException | TimeoutException e) {
+        } catch (IOException | TimeoutException e) {
             log.error("keycloak-to-rabbitmq ERROR on connection to rabbitmq", e);
         }
     }
@@ -44,9 +43,9 @@ public class RabbitmqEmailSenderProviderFactory implements EmailSenderProviderFa
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost("rabbitmq-svc"); // Set your broker host
             factory.setPort(5672); // Set your broker port
-            factory.setVirtualHost("/"); 
-            factory.setUsername("admin"); 
-            factory.setPassword("admin"); 
+            factory.setVirtualHost("/");
+            factory.setUsername("admin");
+            factory.setPassword("admin");
             this.connectionFactory = factory;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create AMQP connection", e);
@@ -74,4 +73,4 @@ public class RabbitmqEmailSenderProviderFactory implements EmailSenderProviderFa
     public String getId() {
         return "rabbitmq-email-sender";
     }
-} 
+}

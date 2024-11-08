@@ -9,7 +9,6 @@ import org.keycloak.models.UserModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 
 public class RabbitmqEmailSenderProvider implements EmailSenderProvider {
 
@@ -22,15 +21,15 @@ public class RabbitmqEmailSenderProvider implements EmailSenderProvider {
     }
 
     @Override
-    public void send(Map<String, String> config, String subject, String textBody, String htmlBody, String mimeType) throws EmailException {
+    public void send(Map<String, String> config, String subject, String textBody, String htmlBody, String mimeType)
+            throws EmailException {
         try {
             Map<String, Object> messageMap = Map.of(
-                "config", config,
-                "subject", subject,
-                "textBody", textBody,
-                "htmlBody", htmlBody,
-                "mimeType", mimeType
-            );
+                    "config", config,
+                    "subject", subject,
+                    "textBody", textBody,
+                    "htmlBody", htmlBody,
+                    "mimeType", mimeType);
             String message = new ObjectMapper().writeValueAsString(messageMap);
             channel.basicPublish("amq.topic", "KK.EMAIL.SEND", null, message.getBytes("UTF-8"));
         } catch (Exception e) {
@@ -40,23 +39,22 @@ public class RabbitmqEmailSenderProvider implements EmailSenderProvider {
     }
 
     @Override
-    public void send(Map<String, String> config, UserModel user, String subject, String textBody, String htmlBody) throws EmailException {
+    public void send(Map<String, String> config, UserModel user, String subject, String textBody, String htmlBody)
+            throws EmailException {
         try {
             Map<String, Object> messageMap = Map.of(
-                "config", config,
-                "subject", subject,
-                "textBody", textBody,
-                "htmlBody", htmlBody,
-                "user", Map.of(
-                    "id", user.getId(),
-                    "username", user.getUsername(),
-                    "isEmailVerified", user.isEmailVerified(),
-                    "email", user.getEmail(),
-                    "firstName", user.getFirstName(),
-                    "lastName", user.getLastName(),
-                    "attributes", user.getAttributes()
-                )
-            );
+                    "config", config,
+                    "subject", subject,
+                    "textBody", textBody,
+                    "htmlBody", htmlBody,
+                    "user", user != null ? Map.of(
+                            "id", user.getId(),
+                            "username", user.getUsername(),
+                            "isEmailVerified", user.isEmailVerified(),
+                            "email", user.getEmail(),
+                            "firstName", user.getFirstName(),
+                            "lastName", user.getLastName(),
+                            "attributes", user.getAttributes()) : null);
             String message = new ObjectMapper().writeValueAsString(messageMap);
             channel.basicPublish("amq.topic", "KK.EMAIL.SEND", null, message.getBytes("UTF-8"));
         } catch (Exception e) {
@@ -68,4 +66,4 @@ public class RabbitmqEmailSenderProvider implements EmailSenderProvider {
     public void close() {
         // Clean up resources if needed
     }
-} 
+}
