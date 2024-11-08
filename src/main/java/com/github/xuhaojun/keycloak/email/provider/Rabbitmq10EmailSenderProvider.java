@@ -10,12 +10,12 @@ import org.keycloak.models.UserModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 
-public class RabbitmqEmailSenderProvider implements EmailSenderProvider {
+public class Rabbitmq10EmailSenderProvider implements EmailSenderProvider {
 
     private final KeycloakSession session;
     private final Channel channel;
 
-    public RabbitmqEmailSenderProvider(KeycloakSession session, Channel channel) {
+    public Rabbitmq10EmailSenderProvider(KeycloakSession session, Channel channel) {
         this.session = session;
         this.channel = channel;
     }

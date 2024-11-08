@@ -20,7 +20,7 @@ services:
     command: [
         "--verbose",
         "start",
-        "--spi-email-sender-provider=rabbitmq-email-sender"
+        "--spi-email-sender-provider=rabbitmq091-email-sender"
       ]
     env_file: .env
     environment:

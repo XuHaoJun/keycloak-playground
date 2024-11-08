@@ -1,1 +1,2 @@
-com.github.xuhaojun.keycloak.email.provider.RabbitmqEmailSenderProviderFactory
+com.github.xuhaojun.keycloak.email.provider.Rabbitmq091EmailSenderProviderFactory
+com.github.xuhaojun.keycloak.email.provider.Rabbitmq10EmailSenderProviderFactory

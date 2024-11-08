@@ -37,6 +37,11 @@
             <version>5.14.2</version>
             <!-- Use the appropriate version -->
         </dependency>
+        <dependency>
+            <groupId>com.rabbitmq.client</groupId>
+            <artifactId>amqp-client</artifactId>
+            <version>0.2.0</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>rabbitmq-email-sender-provider</finalName>

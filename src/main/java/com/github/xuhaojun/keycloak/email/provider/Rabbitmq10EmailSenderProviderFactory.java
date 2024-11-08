@@ -12,8 +12,8 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-public class RabbitmqEmailSenderProviderFactory implements EmailSenderProviderFactory {
-    private static final Logger log = Logger.getLogger(RabbitmqEmailSenderProviderFactory.class);
+public class Rabbitmq10EmailSenderProviderFactory implements EmailSenderProviderFactory {
+    private static final Logger log = Logger.getLogger(Rabbitmq10EmailSenderProviderFactory.class);
     private ConnectionFactory connectionFactory;
     private Connection connection;
     private Channel channel;
@@ -21,7 +21,7 @@ public class RabbitmqEmailSenderProviderFactory implements EmailSenderProviderFa
     @Override
     public EmailSenderProvider create(KeycloakSession session) {
         checkConnectionAndChannel();
-        return new RabbitmqEmailSenderProvider(session, this.channel);
+        return new Rabbitmq10EmailSenderProvider(session, this.channel);
     }
 
     private synchronized void checkConnectionAndChannel() {
@@ -71,6 +71,6 @@ public class RabbitmqEmailSenderProviderFactory implements EmailSenderProviderFa
 
     @Override
     public String getId() {
-        return "rabbitmq-email-sender";
+        return "rabbitmq10-email-sender";
     }
 }
