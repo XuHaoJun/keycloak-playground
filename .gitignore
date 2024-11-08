@@ -1,3 +1,4 @@
 node_modules/
 target/
 .mvn/wrapper/*.jar
+dependency-reduced-pom.xml

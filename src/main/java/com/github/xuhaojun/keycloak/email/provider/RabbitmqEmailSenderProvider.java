@@ -2,28 +2,65 @@ package com.github.xuhaojun.keycloak.email.provider;
 
 import java.util.Map;
 
+import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailSenderProvider;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.UserModel;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
 public class RabbitmqEmailSenderProvider implements EmailSenderProvider {
 
     private final KeycloakSession session;
-    private final Connection amqpConnection;
+    private final Channel channel;
 
-    public RabbitmqEmailSenderProvider(KeycloakSession session, Connection amqpConnection) {
+    public RabbitmqEmailSenderProvider(KeycloakSession session, Channel channel) {
         this.session = session;
-        this.amqpConnection = amqpConnection;
+        this.channel = channel;
     }
 
     @Override
-    public void send(Map<String, String> map, String subject, String textBody, String htmlBody, String mimeType) {
-        try (Channel channel = amqpConnection.createChannel()) {
-            String message = "Subject: " + subject + "\nText: " + textBody + "\nHTML: " + htmlBody;
-            channel.basicPublish("amp.topic", "KK.EMAIL.SEND", null, message.getBytes());
+    public void send(Map<String, String> config, String subject, String textBody, String htmlBody, String mimeType) throws EmailException {
+        try {
+            Map<String, Object> messageMap = Map.of(
+                "config", config,
+                "subject", subject,
+                "textBody", textBody,
+                "htmlBody", htmlBody,
+                "mimeType", mimeType
+            );
+            String message = new ObjectMapper().writeValueAsString(messageMap);
+            channel.basicPublish("amq.topic", "KK.EMAIL.SEND", null, message.getBytes("UTF-8"));
         } catch (Exception e) {
+            throw new EmailException(e.toString());
             // Handle exception
+        }
+    }
+
+    @Override
+    public void send(Map<String, String> config, UserModel user, String subject, String textBody, String htmlBody) throws EmailException {
+        try {
+            Map<String, Object> messageMap = Map.of(
+                "config", config,
+                "subject", subject,
+                "textBody", textBody,
+                "htmlBody", htmlBody,
+                "user", Map.of(
+                    "id", user.getId(),
+                    "username", user.getUsername(),
+                    "isEmailVerified", user.isEmailVerified(),
+                    "email", user.getEmail(),
+                    "firstName", user.getFirstName(),
+                    "lastName", user.getLastName(),
+                    "attributes", user.getAttributes()
+                )
+            );
+            String message = new ObjectMapper().writeValueAsString(messageMap);
+            channel.basicPublish("amq.topic", "KK.EMAIL.SEND", null, message.getBytes("UTF-8"));
+        } catch (Exception e) {
+            throw new EmailException(e.toString());
         }
     }
 

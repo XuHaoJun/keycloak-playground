@@ -17,7 +17,11 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:23.0.6
-    command: start
+    command: [
+        "--verbose",
+        "start",
+        "--spi-email-sender-provider=rabbitmq-email-sender"
+      ]
     env_file: .env
     environment:
       KC_HOSTNAME: localhost
@@ -40,6 +44,7 @@ services:
       - rabbitmq-svc
     volumes:
       - ./keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.5.jar
+      - ./rabbitmq-email-sender-provider-0.1.jar:/opt/keycloak/providers/rabbitmq-email-sender-provider-0.1.jar
     networks:
       - keycloak_network
 

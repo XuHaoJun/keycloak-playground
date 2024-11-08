@@ -1,28 +1,53 @@
 package com.github.xuhaojun.keycloak.email.provider;
 
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+import org.jboss.logging.Logger;
 import org.keycloak.email.EmailSenderProvider;
 import org.keycloak.email.EmailSenderProviderFactory;
 import org.keycloak.models.KeycloakSession;
+
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class RabbitmqEmailSenderProviderFactory implements EmailSenderProviderFactory {
-
-    private Connection amqpConnection;
+    private static final Logger log = Logger.getLogger(RabbitmqEmailSenderProviderFactory.class);
+    private ConnectionFactory connectionFactory;
+    private Connection connection;
+    private Channel channel;
 
     @Override
     public EmailSenderProvider create(KeycloakSession session) {
-        return new RabbitmqEmailSenderProvider(session, amqpConnection);
+        checkConnectionAndChannel();
+        return new RabbitmqEmailSenderProvider(session, this.channel);
+    }
+
+    private synchronized void checkConnectionAndChannel() {
+        try {
+            if (connection == null || !connection.isOpen()) {
+                this.connection = connectionFactory.newConnection();
+            }
+            if (channel == null || !channel.isOpen()) {
+                channel = connection.createChannel();
+            }
+        }
+        catch (IOException | TimeoutException e) {
+            log.error("keycloak-to-rabbitmq ERROR on connection to rabbitmq", e);
+        }
     }
 
     @Override
     public void init(org.keycloak.Config.Scope config) {
         try {
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("localhost"); // Set your broker host
+            factory.setHost("rabbitmq-svc"); // Set your broker host
             factory.setPort(5672); // Set your broker port
-            // Set other connection properties as needed
-            amqpConnection = factory.newConnection();
+            factory.setVirtualHost("/"); 
+            factory.setUsername("admin"); 
+            factory.setPassword("admin"); 
+            this.connectionFactory = factory;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create AMQP connection", e);
         }
@@ -36,8 +61,9 @@ public class RabbitmqEmailSenderProviderFactory implements EmailSenderProviderFa
     @Override
     public void close() {
         try {
-            if (amqpConnection != null) {
-                amqpConnection.close();
+            if (connection != null) {
+                channel.close();
+                connection.close();
             }
         } catch (Exception e) {
             // Handle exception
@@ -46,6 +72,6 @@ public class RabbitmqEmailSenderProviderFactory implements EmailSenderProviderFa
 
     @Override
     public String getId() {
-        return "custom-email-sender";
+        return "rabbitmq-email-sender";
     }
 } 

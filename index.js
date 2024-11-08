@@ -7,7 +7,7 @@ async function listenToRabbitMQChannel() {
     const channel = await connection.createChannel();
 
     // Declare the queue
-    const queue = 'foo';
+    const queue = 'send-email';
     await channel.assertQueue(queue, { durable: true });
 
     // Start consuming messages
