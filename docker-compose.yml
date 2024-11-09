@@ -1,5 +1,3 @@
-version: '3.7'
-
 services:
   postgres:
     image: postgres:16.2
@@ -20,7 +18,7 @@ services:
     command: [
         "--verbose",
         "start",
-        "--spi-email-sender-provider=rabbitmq091-email-sender"
+        "--spi-email-sender-provider=rabbitmq10-email-sender"
       ]
     env_file: .env
     environment:

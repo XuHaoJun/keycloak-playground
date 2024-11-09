@@ -33,8 +33,7 @@ public class Rabbitmq091EmailSenderProvider implements EmailSenderProvider {
             String message = new ObjectMapper().writeValueAsString(messageMap);
             channel.basicPublish("amq.topic", "KK.EMAIL.SEND", null, message.getBytes("UTF-8"));
         } catch (Exception e) {
-            throw new EmailException(e.toString());
-            // Handle exception
+            throw new EmailException(e);
         }
     }
 
@@ -46,19 +45,21 @@ public class Rabbitmq091EmailSenderProvider implements EmailSenderProvider {
                     "config", config,
                     "subject", subject,
                     "textBody", textBody,
-                    "htmlBody", htmlBody,
-                    "user", user != null ? Map.of(
-                            "id", user.getId(),
-                            "username", user.getUsername(),
-                            "isEmailVerified", user.isEmailVerified(),
-                            "email", user.getEmail(),
-                            "firstName", user.getFirstName(),
-                            "lastName", user.getLastName(),
-                            "attributes", user.getAttributes()) : null);
+                    "htmlBody", htmlBody);
+            if (user != null) {
+                messageMap.put("user", Map.of(
+                        "id", user.getId(),
+                        "username", user.getUsername(),
+                        "isEmailVerified", user.isEmailVerified(),
+                        "email", user.getEmail(),
+                        "firstName", user.getFirstName(),
+                        "lastName", user.getLastName(),
+                        "attributes", user.getAttributes()));
+            }
             String message = new ObjectMapper().writeValueAsString(messageMap);
             channel.basicPublish("amq.topic", "KK.EMAIL.SEND", null, message.getBytes("UTF-8"));
         } catch (Exception e) {
-            throw new EmailException(e.toString());
+            throw new EmailException(e);
         }
     }
 

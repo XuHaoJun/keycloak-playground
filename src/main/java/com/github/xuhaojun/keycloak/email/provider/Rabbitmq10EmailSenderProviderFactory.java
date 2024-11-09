@@ -8,31 +8,29 @@ import org.keycloak.email.EmailSenderProvider;
 import org.keycloak.email.EmailSenderProviderFactory;
 import org.keycloak.models.KeycloakSession;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.amqp.*;
+import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 
 public class Rabbitmq10EmailSenderProviderFactory implements EmailSenderProviderFactory {
     private static final Logger log = Logger.getLogger(Rabbitmq10EmailSenderProviderFactory.class);
-    private ConnectionFactory connectionFactory;
+    private AmqpEnvironmentBuilder enviromentFactory;
+    private Environment enviroment;
     private Connection connection;
-    private Channel channel;
+    private Publisher publisher;
 
     @Override
     public EmailSenderProvider create(KeycloakSession session) {
         checkConnectionAndChannel();
-        return new Rabbitmq10EmailSenderProvider(session, this.channel);
+        return new Rabbitmq10EmailSenderProvider(session, this.publisher);
     }
 
     private synchronized void checkConnectionAndChannel() {
         try {
-            if (connection == null || !connection.isOpen()) {
-                this.connection = connectionFactory.newConnection();
+            if (connection == null) {
+                this.connection = enviroment.connectionBuilder().build();
+                this.publisher = connection.publisherBuilder().exchange("amq.topic").key("KK.EMAIL.SEND").build();
             }
-            if (channel == null || !channel.isOpen()) {
-                channel = connection.createChannel();
-            }
-        } catch (IOException | TimeoutException e) {
+        } catch (Exception e) {
             log.error("keycloak-to-rabbitmq ERROR on connection to rabbitmq", e);
         }
     }
@@ -40,13 +38,11 @@ public class Rabbitmq10EmailSenderProviderFactory implements EmailSenderProvider
     @Override
     public void init(org.keycloak.Config.Scope config) {
         try {
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("rabbitmq-svc"); // Set your broker host
-            factory.setPort(5672); // Set your broker port
-            factory.setVirtualHost("/");
-            factory.setUsername("admin");
-            factory.setPassword("admin");
-            this.connectionFactory = factory;
+            AmqpEnvironmentBuilder factory = new AmqpEnvironmentBuilder();
+            factory.connectionSettings().host("rabbitmq-svc").port(5672).virtualHost("/").username("admin")
+                    .password("admin");
+            this.enviromentFactory = factory;
+            this.enviroment = enviromentFactory.build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to create AMQP connection", e);
         }
@@ -60,8 +56,10 @@ public class Rabbitmq10EmailSenderProviderFactory implements EmailSenderProvider
     @Override
     public void close() {
         try {
+            if (enviroment != null) {
+                enviroment.close();
+            }
             if (connection != null) {
-                channel.close();
                 connection.close();
             }
         } catch (Exception e) {
